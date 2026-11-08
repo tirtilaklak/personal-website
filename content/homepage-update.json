@@ -1,0 +1,31 @@
+{
+  "tagline": "AI evaluation and reliable agents",
+  "panelTitle": "Current focus",
+  "panelText": "Evaluation integrity and verifiable environments for AI agents.",
+  "panelDetail": "Long-horizon reasoning · Reliable verifiers · Research to practice",
+  "bio": "I build and evaluate AI systems. My current focus is agent reliability: how to tell whether a system can solve a difficult task, and whether the test itself deserves our confidence.\n\nMy recent work includes coding-agent tasks, reproducible evaluation environments, and verifiers. I am interested in long-horizon reasoning, error recovery, and separating model failures from problems in the environment or grader. I am also exploring AI Neolab: an independent effort to bring mathematical and engineering talent to the design of better training and evaluation environments.\n\nMy background spans engineering and product development at Amazon, Boeing, and Carnival. I studied electrical engineering and earned an MBA from Purdue. Alongside my evaluation work, I build independent projects, including [ScienceToStartup](https://sciencetostartup.com) and SnoLocal.",
+  "interests": "AI Neolab (exploratory)\nScienceToStartup\nSnoLocal",
+  "projects": [
+    {
+      "title": "AI Neolab",
+      "description": "An exploratory effort focused on expert-designed training and evaluation environments for AI agents. The question is whether difficult tasks with independently verifiable outcomes can improve reliability on new problems.",
+      "url": ""
+    },
+    {
+      "title": "ScienceToStartup",
+      "description": "A tool for examining arXiv papers as potential startup ideas: what the research makes possible, where it might be useful, and what would need to be tested.",
+      "url": "https://sciencetostartup.com"
+    },
+    {
+      "title": "SnoLocal",
+      "description": "A hyperlocal iOS planning app for families, built with SwiftUI and Supabase. I used written specifications, versioned project context, and AI coding agents throughout development.",
+      "url": ""
+    }
+  ],
+  "news": "Agent evaluation: constructing difficult coding tasks and checking that tests and verifiers measure the intended behavior.\nAI systems and platforms: engineering and product work across enterprise AI applications, cloud infrastructure, and operational software.\nIndependent tools: building applications and research tools, including an AI-industry dependency tracker using SEC filings and news.",
+  "serviceTitle": "Research interests",
+  "serviceText": "Evaluation integrity: reproducible tasks, robust verifiers, and distinguishing a model failure from a broken test.\nReliable agents: long-horizon behavior, error recovery, and performance on unfamiliar tasks.\nEmpirical AI safety: understanding consequential failure modes and testing whether proposed safeguards work.\nResearch to practice: turning promising technical ideas into systems whose usefulness can be measured.",
+  "noteTitle": "How I work",
+  "noteText": "Start with a concrete task. Define what success means. Test the verifier as carefully as the system being evaluated. Keep claims proportional to the evidence.",
+  "contactText": "I am interested in conversations about reliable agents, evaluation environments, and research-driven products. You can reach me on [LinkedIn](https://www.linkedin.com/in/musa-emin-ozdem/)."
+}

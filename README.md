@@ -16,6 +16,10 @@ Pushing this repository does not deploy the website or transfer live D1 content.
 | [Source recovery](docs/source-recovery.md) | Verified ZIP, import changes, provenance, and limits |
 | [Original handoff](WEBSITE_HANDOFF.md) | Retained context and historical evidence in full |
 
+The [prepared homepage revision](content/README.md) centers the copy on AI
+evaluation, reliable agents, and exploratory AI Neolab work. It includes local
+desktop/mobile previews and a partial content patch; it is **not applied live**.
+
 ## Local development
 
 Use Node.js `>=22.13.0`, npm, and OpenSSL (for the auth test). From this checkout:
