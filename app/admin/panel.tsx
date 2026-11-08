@@ -1,0 +1,35 @@
+'use client';
+import {useEffect,useState} from 'react';
+import Link from 'next/link';
+import {initializeApp,getApps} from 'firebase/app';
+import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,sendPasswordResetEmail,sendEmailVerification,signOut,setPersistence,browserSessionPersistence,reauthenticateWithCredential,EmailAuthProvider,updatePassword,type User} from 'firebase/auth';
+import {firebaseConfig,ADMIN_EMAIL,ADMIN_UID} from '../../lib/firebase-config';
+import type {Content} from '../content';
+import Site from '../site';
+const auth=()=>getAuth(getApps()[0]||initializeApp(firebaseConfig));
+const box={maxWidth:540,margin:'48px auto',padding:24,border:'1px solid #d7d2ca',borderRadius:8} as const;
+function errorText(error:unknown){const code=(error as {code?:string})?.code;return code==='auth/too-many-requests'?'Too many attempts. Please wait and try again.':code==='auth/weak-password'?'Choose a stronger password with at least 12 characters.':code==='auth/network-request-failed'?'Connection failed. Please try again.':'Could not complete that request. Check your details and try again.';}
+export default function Admin(){
+ const [content,setContent]=useState<Content|null>(null),[version,setVersion]=useState(''),[loadError,setLoadError]=useState(''),[loadingContent,setLoadingContent]=useState(false),[reloadCount,setReloadCount]=useState(0);
+ const [user,setUser]=useState<User|null>(null),[ready,setReady]=useState(false),[email,setEmail]=useState(ADMIN_EMAIL),[password,setPassword]=useState(''),[newPassword,setNewPassword]=useState(''),[confirmPassword,setConfirmPassword]=useState(''),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[changing,setChanging]=useState(false);
+ useEffect(()=>onAuthStateChanged(auth(),u=>{setUser(u);setReady(true);setContent(null);setVersion('');setLoadingContent(true);setLoadError('')}),[]);
+ async function run(action:()=>Promise<void>){setBusy(true);setMessage('');try{await action()}catch(e){setMessage(errorText(e))}finally{setBusy(false)}}
+ const allowed=user?.uid===ADMIN_UID&&user.email===ADMIN_EMAIL;
+ useEffect(()=>{
+   if(!allowed||!user?.emailVerified)return;
+   let cancelled=false;const controller=new AbortController();
+   void (async()=>{try{
+     const token=await user.getIdToken();const response=await fetch('/api/content',{headers:{Authorization:'Bearer '+token},cache:'no-store',signal:controller.signal});
+     const data=await response.json() as {content?:Content;updatedAt?:string;error?:string};
+     if(!response.ok||!data.content||!data.updatedAt)throw new Error(data.error||'Could not load your saved content.');
+     if(!cancelled){setContent(data.content);setVersion(data.updatedAt)}
+   }catch(e){if(!cancelled)setLoadError(e instanceof Error?e.message:'Could not load your saved content.');}finally{if(!cancelled)setLoadingContent(false)}})();
+   return()=>{cancelled=true;controller.abort()};
+ },[allowed,user,reloadCount]);
+ if(!ready)return <div style={box} role="status">Loading admin sign-in…</div>;
+ return <><section style={box}><Link href="/">← View website</Link><h1 style={{fontSize:28}}>Website admin</h1><p>Independent email and password access. No ChatGPT sign-in.</p>
+ {!user?<form onSubmit={e=>{e.preventDefault();void run(async()=>{if(email.trim().toLowerCase()!==ADMIN_EMAIL)throw new Error('Unauthorized');await setPersistence(auth(),browserSessionPersistence);await signInWithEmailAndPassword(auth(),ADMIN_EMAIL,password);setPassword('')})}}><label className="field">Email<input type="email" autoComplete="username" required value={email} onChange={e=>setEmail(e.target.value)}/></label><label className="field">Password<input type="password" autoComplete="current-password" required value={password} onChange={e=>setPassword(e.target.value)}/></label><button className="primary" disabled={busy}>Sign in</button><button type="button" className="text-button" disabled={busy} onClick={()=>void run(async()=>{await sendPasswordResetEmail(auth(),ADMIN_EMAIL,{url:"https://musaeminozdem.com/admin"});setMessage('A password-reset email has been requested. Check your inbox and spam folder.')})}>Forgot password?</button></form>:!allowed?<><p>This account is not authorized to edit this website.</p><button disabled={busy} onClick={()=>void run(()=>signOut(auth()))}>Sign out</button></>:<><p>Signed in as {ADMIN_EMAIL}</p>{!user.emailVerified?<><p>Verify your email before editing. This protects your website from unauthorized changes.</p><button className="primary" disabled={busy} onClick={()=>void run(async()=>{await sendEmailVerification(user,{url:"https://musaeminozdem.com/admin"});setMessage('Verification email sent. Follow its link, then click “I verified my email”.')})}>Send verification email</button><button disabled={busy} onClick={()=>void run(async()=>{await user.reload();await user.getIdToken(true);setUser(auth().currentUser);if(auth().currentUser?.emailVerified)window.location.reload();else setMessage('Email is not verified yet. Check the verification message.')})}>I verified my email</button></>:<p>Your account is verified. Use “Edit site” below to update and save your website.</p>}
+ <button className="text-button" disabled={busy} onClick={()=>setChanging(!changing)}>Change password</button><button className="text-button" disabled={busy} onClick={()=>void run(async()=>{await signOut(auth());setPassword('');setNewPassword('');setConfirmPassword('');setChanging(false)})}>Sign out</button>
+ {changing&&<form onSubmit={e=>{e.preventDefault();void run(async()=>{if(newPassword.length<12||newPassword!==confirmPassword){setMessage('Use at least 12 characters and make sure the new passwords match.');return;}await reauthenticateWithCredential(user,EmailAuthProvider.credential(ADMIN_EMAIL,password));await updatePassword(user,newPassword);setPassword('');setNewPassword('');setConfirmPassword('');await signOut(auth());setChanging(false);setMessage('Password changed. Sign in again with your new password.')})}}><label className="field">Current password<input type="password" required autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)}/></label><label className="field">New password<input type="password" required minLength={12} autoComplete="new-password" value={newPassword} onChange={e=>setNewPassword(e.target.value)}/></label><label className="field">Confirm new password<input type="password" required minLength={12} autoComplete="new-password" value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)}/></label><button className="primary" disabled={busy}>Update password</button></form>}</>}{message&&<p role="status">{message}</p>}</section>
+ {allowed&&user?.emailVerified&&<>{loadingContent&&<p role="status" style={box}>Loading your saved content…</p>}{loadError&&<div style={box} role="alert"><p>{loadError}</p><button onClick={()=>{setLoadingContent(true);setLoadError('');setReloadCount(x=>x+1)}}>Retry loading</button></div>}{content&&!loadError&&!loadingContent&&<Site key={version} initial={content} initialVersion={version} canEdit={true} getAccessToken={()=>user.getIdToken()}/>}</>}</>;
+}
